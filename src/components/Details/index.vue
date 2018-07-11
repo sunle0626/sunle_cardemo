@@ -9,7 +9,7 @@
         <div class="price">
             <p>{{market.dealer_price}}</p>
             <p>指导价{{market.official_refer_price}}</p>
-            <div class="prbutton"><button>{{data.BottomEntranceTitle}}</button></div>
+            <div class="prbutton"><button @click='gooffer'>{{data.BottomEntranceTitle}}</button></div>
         </div>
         <CarList :list='list' :typelist='car_type_list' />
         <router-view>
@@ -43,6 +43,10 @@ export default {
     this._getlistdata();
   },
   methods: {
+    gooffer(){
+      let id = this.list[0].data[0].car_id;
+      this.$router.push({ path: "/quotation", query: { CarId: id} });
+    },
     _getlistdata:function(){
       let that = this;
       getdetails(

@@ -4,7 +4,7 @@
             <p>可向多个商家咨询最低价，商家及时回复</p>
             <img src="https://h5.chelun.com/2017/official/img/icon-help.png" alt="">
         </header>
-        <div class="content" v-if="!flag">
+        <div class="content" v-if="!flag" @scroll="showfoot">
             <div class="car_detail" >
                 <img :src="offerdata.details.serial.Picture">
                 <div class="detail">
@@ -23,38 +23,60 @@
                         <span>手机</span>
                         <input type="tel" placeholder="输入你的真实手机号码" maxlength="11">
                     </li> 
-                    <li>
+                    <li @click="gocity">
                         <span>城市</span>
-                        <span>北京</span>
+                        <span>{{City}}</span>
                     </li>
                 </ul>
                 <div class="quotation">
                     <button data-hover="hover">询最低价</button>
                 </div>
             </div>
+            <div class="shop_list" ref="shop">
+              <p class="tip">选择报价经销商</p>
+              <ul>
+                <li v-for="(val,ind) in offerdata.list" :key="ind" @click="addclass">
+                  <p>
+                    <span>{{val.dealerShortName}}</span>
+                    <span>{{val.promotePrice.slice(0,val.promotePrice.length-2)}}万</span>
+                  </p>
+                  <p>
+                    <span>{{val.address}}</span>
+                    <span>售{{val.saleRange}}</span>
+                  </p>
+                </li>
+              </ul>
+            </div>
         </div>
+        <footer v-if="flags">
+          <button class="">询最低价</button>
+        </footer>
         <loading v-show="flag"/>
     </div>
 </template>
 
 <script>
-import loading from '../loading'
+import loading from "../loading";
 export default {
   data() {
     return {
       car_id: this.$route.query.CarId,
       offerdata: [],
-      flag:true
+      flag: true,
+      City: "北京",
+      cityid: 201,
+      flags: false
     };
   },
-  components:{
+  components: {
     loading
   },
-  created(){
+  created() {
     fetch(
       "https://baojia.chelun.com/v2-dealer-alllist.html?carId=" +
         this.car_id +
-        "&cityId=201"
+        "&cityId=" +
+        this.cityid
     ).then(res => {
       res.json().then(body => {
         this.flag = false;
@@ -62,8 +84,26 @@ export default {
       });
     });
   },
-  mounted() {
-        console.log(this.offerdata);
+  mounted() {},
+  methods: {
+    showfoot(e) {
+      let top =
+        this.$refs.shop.getBoundingClientRect().height - window.innerHeight;
+      let current = e.target.scrollTop;
+      if (top - current < 150) {
+        this.flags = true;
+      } else {
+        this.flags = false;
+      }
+    },
+    addclass(e) {
+      let el = e.target;
+      if (el.className == "active") {
+        el.className = "";
+      } else {
+        el.className = "active";
+      }
+    }
   }
 };
 </script>
@@ -217,6 +257,89 @@ li {
   background: #3aacff;
   height: 0.7rem;
   border-radius: 0.1rem;
+  outline: none;
+  -webkit-appearance: none;
+  border: none;
+}
+.shop_list .tip {
+  padding: 0 0.2rem;
+  height: 0.6rem;
+  line-height: 0.6rem;
+  font-size: 0.24rem;
+  color: #666;
+  background: #eee;
+}
+.shop_list ul {
+  background: #fff;
+  padding: 0 0.18rem;
+}
+.shop_list li {
+  position: relative;
+  padding: 0.26rem 0 0.26rem 0.54rem;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+  height: 1.65rem;
+}
+.shop_list li:before {
+  content: "";
+  display: inline-block;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0.05rem;
+  top: 50%;
+  -webkit-transform: translate3d(0, -50%, 0);
+  transform: translate3d(0, -50%, 0);
+}
+.shop_list li.active:before {
+  background: #3aacff;
+  border: none;
+}
+.shop_list li.active:after {
+  content: "";
+  display: inline-block;
+  padding-top: 0.17rem;
+  padding-right: 0.1rem;
+  border: 2px solid #fff;
+  -webkit-transform: rotate(40deg) translate3d(0, -50%, 0);
+  transform: rotate(40deg) translate3d(0, -50%, 0);
+  position: absolute;
+  left: 0.07rem;
+  border-left: none;
+  border-top: none;
+  top: 47%;
+}
+.shop_list li p:first-child {
+  font-size: 0.3rem;
+}
+.shop_list li p:nth-child(2) {
+  margin-top: 0.1rem;
+  font-size: 0.24rem;
+  color: #a2a2a2;
+}
+.shop_list li p:first-child span:last-child {
+  font-size: 0.24rem;
+  float: right;
+  color: red;
+}
+.shop_list li p:nth-child(2) span:nth-child(2) {
+  float: right;
+}
+footer {
+  width: 100%;
+  z-index: 99;
+}
+footer button {
+  width: 100%;
+  height: 1rem;
+  line-height: 1rem;
+  background: #3aacff;
+  text-align: center;
+  font-size: 0.34rem;
+  color: #fff;
   outline: none;
   -webkit-appearance: none;
   border: none;

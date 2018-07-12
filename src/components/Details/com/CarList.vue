@@ -45,10 +45,7 @@ export default {
     
   },
   mounted() {
-    
-  },
-  updated(){
-    // this._getdata();
+    this._getdata();
   },
   methods: {
     _getdata(ind=0) {

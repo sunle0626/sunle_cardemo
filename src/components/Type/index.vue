@@ -1,10 +1,15 @@
 <template>
     <div class="type_box">
+      <loading v-show="flag"/>
+      <div v-if="!flag">
         <p class="alltype" @click="goimg('全部车款')">全部车款</p>
         <div class="color_box_main">
         <div class="car_type">
-            <span v-for="(val,index) in  car_type_list" :key="index" @click="_getdata(index)" class="span">
+            <span v-for="(val,index) in  car_type_list" :key="index" @click="_getdata(index)" v-if="index===0" class="span active">
                 {{val}}
+            </span>
+            <span v-else  @click="_getdata(index)" class="span">
+              {{val}}
             </span>
         </div>
         <div class="car_main">
@@ -25,11 +30,13 @@
             </div>
         </div>
         </div>
+      </div>
     </div>
 </template>
 
 <script>
 import { getdetails } from "../../mock";
+import loading from "../loading";
 export default {
   data() {
     return {
@@ -37,17 +44,20 @@ export default {
       list: [],
       car_type_list: [],
       classifytype: [],
-      classifyty: []
+      classifyty: [],
+      flag: true
     };
   },
   mounted() {
     this._getlistdata();
-    this._getdata();
+  },
+  components: {
+    loading
   },
   methods: {
-    _getlistdata: function() {
+    _getlistdata: async function() {
       let that = this;
-      getdetails(
+      await getdetails(
         "https://baojia.chelun.com/v2-car-getInfoAndListById.html?SerialID=" +
           that.typeid
       ).then(res => {
@@ -62,49 +72,47 @@ export default {
           } else {
             that.list.map(val => {
               if (val.type == v.market_attribute.year) {
-                console.log(val.data);
                 val.data.push(v);
               }
             });
           }
         });
-        console.log(that.list);
       });
+      that.flag = false;
+      that._getdata();
     },
     settype(v, i) {},
     goimg(v) {
-      let data = { ...this.$route.query, ...{ typename: v } };
+      let json = this.$route.query;
+      delete json.carId;
+      console.log(json)
       this.$router.push({
         path: "/img",
-        query: data
+        query: { ...json, ...{ typename: v } }
       });
     },
-    goimgs(id,v) {
-      console.log(id);
-      let data = this.$route.query;
-      let json = { ...data, ...{ carId: id, typename: v } };
+    goimgs(id, v) {
+      let json = this.$route.query;
       this.$router.push({
         path: "/img",
-        query: json
+        query: { ...json, ...{ carId: id, typename: v } }
       });
     },
     _getdata(ind = 0) {
       let el = document.querySelectorAll(".span");
-      if (el) {
+      if (el.length > 0) {
         [...el].map(v => {
           if (v.className) {
             v.className = "span";
           }
         });
-        if ([...el][ind].className) {
-          [...el][ind].className = "span active";
-        }
+        [...el][ind].className = "span active";
       }
       let that = this;
       let strarr = [];
       let dataarr = [];
       that.classifytype = [];
-      if ([...that.list[ind].data]) {
+      if (that.list.length > 0) {
         dataarr = [...that.list[ind].data].map(v => {
           let arr = [];
           arr.push(v.exhaust_str);

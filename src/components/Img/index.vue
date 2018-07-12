@@ -1,5 +1,7 @@
 <template>
     <div class="car_img">
+      <loading v-show="flag"/>
+      <div v-if="!flag">
         <div class="titlt">
           <p @click='selcolor'>
             <span>
@@ -32,18 +34,21 @@
               </ol>
           </div>
         </div>
-        <div class="img_box">
-          <ul>
+        <div class="img_box" @scroll="onscroll">
+          <ul ref='ul'>
             <li v-for="(val,ind) in detailimg" :key="ind">
                 <img v-lazy="val">
             </li>
           </ul>
         </div>
+      </div>
+
     </div>
 </template>
 
 <script>
 import { getimgs, getdetailimgs } from "../../mock";
+import loading from "../loading";
 export default {
   data() {
     return {
@@ -55,21 +60,35 @@ export default {
       ind: 1,
       id: 0,
       colorId: this.$route.query.colorId,
-      carId: this.$route.query.carId
+      carId: this.$route.query.carId,
+      flag: true,
+      fetchingAll: false
     };
+  },
+  components: {
+    loading
   },
   mounted() {
     this._getimgs();
   },
   methods: {
-    _scroll() {
-      let el = document.querySelector(".img_box ul");
-      console.log(el);
-      document.onscroll = function(e) {
-        console.log(el[el.length - 1].offsetTop);
-      };
+    onscroll(e) {
+      if (this.fetchingAll) {
+        return;
+      }
+      let scrollHeight =
+        this.$refs.ul.getBoundingClientRect().height - window.innerHeight;
+      let current = e.target.scrollTop;
+      console.log(current > scrollHeight - 20);
+      if (current > scrollHeight - 20) {
+        // 加载下一页数据
+        this.fetchingAll = true;
+        this.detail();
+      } else {
+        return;
+      }
     },
-    _getimgs: function() {
+    _getimgs() {
       let that = this;
       let url = "";
       if (that.colorId && !that.carId) {
@@ -84,7 +103,7 @@ export default {
           that.Imgid +
           "&ColorID=" +
           that.colorId +
-          "&CarID" +
+          "&CarID=" +
           that.carId;
       } else if (!that.colorId && that.carId) {
         url =
@@ -104,13 +123,17 @@ export default {
           });
         });
         that.imgList = res;
+        that.flag = false;
       });
     },
     setid(id) {
       this.id = id;
     },
     detail() {
-      document.querySelector(".img_box").className += " show";
+      let show = document.querySelector(".show");
+      if (!show) {
+        document.querySelector(".img_box").className += " show";
+      }
       let that = this;
       let url = "";
       if (that.colorId && !that.carId) {
@@ -131,7 +154,7 @@ export default {
           "&ImageID=" +
           that.id +
           "&CarID=" +
-          that.carId6 +
+          that.carId +
           "&Page=" +
           that.ind +
           "&PageSize=30";
@@ -140,21 +163,34 @@ export default {
           "https://baojia.chelun.com/v2-car-getCategoryImageList.html?SerialID=" +
           that.Imgid +
           "&ImageID=" +
-          that.id;
+          that.id +
+          "&Page=" +
+          that.ind +
+          "&PageSize=30";
       }
       getdetailimgs(url).then(res => {
-        console.log(res);
         res.data.List.map(v => {
           let url = v.Url.replace("{0}", v.LowSize);
           that.detailimg.push(url);
         });
+        that.ind++;
+        that.fetchingAll = false;
       });
     },
     selcolor() {
-      this.$router.push({ path: "/color", query: { Id: this.Imgid } });
+      let json = this.$route.query;
+      console.log(json);
+      this.$router.push({
+        path: "/color",
+        query: { ...json, ...{ Id: this.Imgid } }
+      });
     },
     seltype() {
-      this.$router.push({ path: "/type", query: { Id: this.Imgid } });
+      let json = this.$route.query;
+      this.$router.push({
+        path: "/type",
+        query: { ...json, ...{ Id: this.Imgid } }
+      });
     }
   }
 };
@@ -275,7 +311,7 @@ li {
   display: none;
   top: 0;
   text-align: center;
-  position: fixed;
+  position: absolute;
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   width: 100%;
@@ -286,8 +322,8 @@ li {
   display: block;
 }
 .img_box ul {
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 .img_box li {
   float: left;

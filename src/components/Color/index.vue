@@ -1,5 +1,7 @@
 <template>
     <div class="color_box">
+       <loading v-show="flag"/>
+       <div v-if="!flag">
         <p class="allcolor" @click="goimg">全部颜色</p>
         <div class="color_box_main">
         <p class="color_type">
@@ -17,11 +19,13 @@
             </li>
         </ul>
         </div>
+       </div>
     </div>
 </template>
 
 <script>
 import { getcolor } from "../../mock";
+import loading from "../loading";
 export default {
   data() {
     return {
@@ -33,20 +37,28 @@ export default {
         return {
           background: color
         };
-      }
+      },
+      flag: true
     };
   },
   mounted() {
-    getcolor(
-      "https://baojia.chelun.com/v2-car-getModelImageYearColor.html?SerialID=" +
-        this.imglistId
-    ).then(res => {
-      this.colortypeList = Object.keys(res.data).reverse();
-      this.datalist = res.data;
-      this.colorList = res.data[this.colortypeList[0]];
-    });
+    this._getcolor();
+  },
+  components: {
+    loading
   },
   methods: {
+    _getcolor() {
+      getcolor(
+        "https://baojia.chelun.com/v2-car-getModelImageYearColor.html?SerialID=" +
+          this.imglistId
+      ).then(res => {
+        this.colortypeList = Object.keys(res.data).reverse();
+        this.datalist = res.data;
+        this.colorList = res.data[this.colortypeList[0]];
+        this.flag = false;
+      });
+    },
     setcolors(v, i) {
       this.colorList = this.datalist[v];
       let spans = [...document.querySelectorAll(".spannode")];
@@ -58,10 +70,22 @@ export default {
       });
     },
     goimg() {
-      this.$router.push({ path: "/img", query: { Id: this.imglistId } });
+      let json = this.$route.query;
+      delete json.colorId
+      this.$router.push({
+        path: "/img",
+        query: { ...json, ...{ Id: this.imglistId ,colorname:'全部颜色'} }
+      });
     },
-    goimgs(colorid,colorname) {
-      this.$router.push({ path: "/img", query: { Id: this.imglistId,colorId:colorid ,colorname} });
+    goimgs(colorid, colorname) {
+      let json = this.$route.query;
+      this.$router.push({
+        path: "/img",
+        query: {
+          ...json,
+          ...{ Id: this.imglistId, colorId: colorid, colorname }
+        }
+      });
     }
   }
 };

@@ -1,17 +1,21 @@
 <template>
     <div class="details">
-        <div class="img" @click="img">
+        <loading v-show="flag"/>
+        <div v-if="!flag">
+          <div class="img" @click="img">
             <img v-lazy="data.CoverPhoto" alt="">
             <span>
                 {{data.pic_group_count}}张图片
             </span>
-        </div>
-        <div class="price">
+          </div>
+          <div class="price">
             <p>{{market.dealer_price}}</p>
             <p>指导价{{market.official_refer_price}}</p>
             <div class="prbutton"><button @click='gooffer'>{{data.BottomEntranceTitle}}</button></div>
-        </div>
+          </div>
         <CarList :list='list' :typelist='car_type_list' />
+        </div>
+        
         <router-view>
         </router-view>
     </div>
@@ -20,6 +24,7 @@
 <script>
 import { getdetails, getimgs } from "../../mock";
 import CarList from "./com/CarList";
+import loading from "../loading";
 export default {
   data() {
     return {
@@ -27,6 +32,7 @@ export default {
       data: {},
       imgdata: {},
       market: {},
+      flag:true,
       list: [
         {
           type: "全部",
@@ -37,22 +43,24 @@ export default {
     };
   },
   components: {
-    CarList
+    CarList,
+    loading
   },
   mounted() {
     this._getlistdata();
   },
   methods: {
-    gooffer(){
+    gooffer() {
       let id = this.list[0].data[0].car_id;
-      this.$router.push({ path: "/quotation", query: { CarId: id} });
+      this.$router.push({ path: "/quotation", query: { CarId: id } });
     },
-    _getlistdata:function(){
+    _getlistdata: function() {
       let that = this;
       getdetails(
         "https://baojia.chelun.com/v2-car-getInfoAndListById.html?SerialID=" +
           that.detailsId
       ).then(res => {
+        that.flag = false;
         that.data = res;
         that.market = res.market_attribute;
         res.list.map(v => {

@@ -4,8 +4,8 @@
             <p>可向多个商家咨询最低价，商家及时回复</p>
             <img src="https://h5.chelun.com/2017/official/img/icon-help.png" alt="">
         </header>
-        <div class="content">
-            <div class="car_detail">
+        <div class="content" v-if="!flag">
+            <div class="car_detail" >
                 <img :src="offerdata.details.serial.Picture">
                 <div class="detail">
                     <p>{{offerdata.details.serial.AliasName}}</p>
@@ -33,28 +33,37 @@
                 </div>
             </div>
         </div>
+        <loading v-show="flag"/>
     </div>
 </template>
 
 <script>
+import loading from '../loading'
 export default {
   data() {
     return {
       car_id: this.$route.query.CarId,
-      offerdata: []
+      offerdata: [],
+      flag:true
     };
   },
-  mounted() {
+  components:{
+    loading
+  },
+  created(){
     fetch(
       "https://baojia.chelun.com/v2-dealer-alllist.html?carId=" +
         this.car_id +
         "&cityId=201"
     ).then(res => {
       res.json().then(body => {
+        this.flag = false;
         this.offerdata = body.data;
       });
     });
-    console.log(this.car_id);
+  },
+  mounted() {
+        console.log(this.offerdata);
   }
 };
 </script>

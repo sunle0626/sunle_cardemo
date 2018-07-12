@@ -1,10 +1,12 @@
 <template>
     <div>
-      <Lists :List="List" class="listbox" @selectdata="selectdata" ref="listbox"/>
-      <Letter :List="letterlist" class="letter"  @clickcode="clickcode" @code="code"/>
-      <SelectList :selectlist="selectlist" class="selectbox" ref="selectbox" @details="getdetails"/>
-      <div class="codebox">
-      {{Ecode}}
+      <div>
+        <Lists :List="List" class="listbox" @selectdata="selectdata" ref="listbox"/>
+        <Letter :List="letterlist" class="letter"  @clickcode="clickcode" @code="code"/>
+        <SelectList :selectlist="selectlist" class="selectbox" ref="selectbox" @details="getdetails"/>
+        <div class="codebox">
+        {{Ecode}}
+        </div>
       </div>
       <transition name="custom-classes-transition"  enter-active-class="animated slideInRight" leave-active-class="animated slideOutLeft"><router-view></router-view></transition>
     </div>
@@ -20,7 +22,7 @@ export default {
     return {
       selectlist: {},
       detailsid: 0,
-      Ecode: ""
+      Ecode: "",
     };
   },
   components: {

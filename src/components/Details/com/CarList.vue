@@ -18,14 +18,14 @@
                      <span>指导价&nbsp;{{v.market_attribute.official_refer_price}}</span>
                      <span>{{v.market_attribute.dealer_price_min}}起</span>
                     </p>
-                    <button>
+                    <button @click='gooffer(v.car_id)'>
                       询问底价
                     </button>
                   </li>
                 </ul>
             </div>
         </div>
-        <div class="bottom_button">
+        <div class="bottom_button" @click="gooffer(0)">
           <p>询问底价</p>
           <p>本地经销商为你报价</p>
         </div>
@@ -41,15 +41,20 @@ export default {
     };
   },
   props: ["list", "typelist"],
-  created() {
-    
-  },
+  created() {},
   mounted() {
     this._getdata();
   },
   methods: {
-    _getdata(ind=0) {
-      console.log(ind);
+    gooffer(id) {
+      if (id) {
+        this.$router.push({ path: "/quotation", query: { CarId: id } });
+      } else {
+        let id = this.list[0].data[0].car_id;
+        this.$router.push({ path: "/quotation", query: { CarId: id } });
+      }
+    },
+    _getdata(ind = 0) {
       let el = document.querySelectorAll(".span");
       [...el].map(v => {
         v.className = "span";
@@ -58,7 +63,7 @@ export default {
       let that = this;
       let strarr = [];
       that.classifytype = [];
-      console
+      console;
       let dataarr = [...that.list[ind].data].map(v => {
         let arr = [];
         arr.push(v.exhaust_str);
@@ -74,7 +79,9 @@ export default {
         that.classifyty[v.split(",").join("/")] = [];
         let varr = dataarr.map((val, i) => {
           if (val === v.split(",").join("/")) {
-            that.classifyty[v.split(",").join("/")].push(that.list[ind].data[i]);
+            that.classifyty[v.split(",").join("/")].push(
+              that.list[ind].data[i]
+            );
           }
         });
       });

@@ -23,9 +23,9 @@
                         <span>手机</span>
                         <input type="tel" placeholder="输入你的真实手机号码" maxlength="11">
                     </li> 
-                    <li @click="gocity">
+                    <li>
                         <span>城市</span>
-                        <span>{{City}}</span>
+                        <span @click="gocity">{{City}}</span>
                     </li>
                 </ul>
                 <div class="quotation">
@@ -38,7 +38,7 @@
                 <li v-for="(val,ind) in offerdata.list" :key="ind" @click="addclass">
                   <p>
                     <span>{{val.dealerShortName}}</span>
-                    <span>{{val.promotePrice.slice(0,val.promotePrice.length-2)}}万</span>
+                    <span>{{val.promotePrice.slice(0,val.promotePrice.length-2)||val.vendorPrice.slice(0,val.promotePrice.length-2)}}万</span>
                   </p>
                   <p>
                     <span>{{val.address}}</span>
@@ -47,6 +47,29 @@
                 </li>
               </ul>
             </div>
+        </div>
+        <div class="select_city" ref="select_city">
+          <div class="province">
+            <div class="location">
+              <p>自动定位</p>
+              <p>{{City}}</p>
+            </div>
+            <div class="list">
+                <p>省市</p>
+                <ul>
+                  <li v-for="(val,ind) in citylist" :key="ind" :data-id="val.CityID" @click="getcity(val.CityID)">
+                    {{val.CityName}}
+                  </li>
+                </ul>
+            </div>
+          </div>
+          <div class="city" ref="city" @click="back">
+            <ul class="cityList">
+              <li v-for="(val,ind) in citylists" :key="ind" :data-id="val.CityID" @click="setcity(val.CityID,val.CityName)">
+                {{val.CityName}}
+              </li>
+            </ul>
+          </div>
         </div>
         <footer v-if="flags">
           <button class="">询最低价</button>
@@ -65,27 +88,71 @@ export default {
       flag: true,
       City: "北京",
       cityid: 201,
-      flags: false
+      flags: false,
+      citylist: [],
+      citylists: []
     };
   },
   components: {
     loading
   },
-  created() {
-    fetch(
-      "https://baojia.chelun.com/v2-dealer-alllist.html?carId=" +
-        this.car_id +
-        "&cityId=" +
-        this.cityid
-    ).then(res => {
-      res.json().then(body => {
-        this.flag = false;
-        this.offerdata = body.data;
-      });
-    });
+  created() {},
+  mounted() {
+    this.getcitydata();
   },
-  mounted() {},
   methods: {
+    back(e) {
+      let el = e.target;
+      if (el.className.indexOf("city") >= 0) {
+        el.className = "city";
+      }
+    },
+    getcitydata() {
+      fetch(
+        "https://baojia.chelun.com/v2-dealer-alllist.html?carId=" +
+          this.car_id +
+          "&cityId=" +
+          this.cityid
+      ).then(res => {
+        res.json().then(body => {
+          this.flag = false;
+          this.offerdata = body.data;
+        });
+      });
+    },
+    setcity(cityid, City) {
+      this.cityid = cityid;
+      this.City = City;
+      let select_city = this.$refs.select_city;
+      let city = this.$refs.city;
+      select_city.className = "select_city";
+      city.className = "city";
+      this.getcitydata();
+    },
+    getcity(id) {
+      let el = this.$refs.city;
+      if (el.className.indexOf("active") < 0) {
+        el.className += " active";
+      }
+      fetch(
+        "https://baojia.chelun.com/v1-city-alllist.html?provinceid=" + id
+      ).then(res => {
+        res.json().then(body => {
+          this.citylists = body.data;
+        });
+      });
+    },
+    gocity() {
+      let el = this.$refs.select_city;
+      if (el.className.indexOf("active") < 0) {
+        el.className += " active";
+      }
+      fetch("https://baojia.chelun.com/v1-city-alllist.html").then(res => {
+        res.json().then(body => {
+          this.citylist = body.data;
+        });
+      });
+    },
     showfoot(e) {
       let top =
         this.$refs.shop.getBoundingClientRect().height - window.innerHeight;
@@ -343,5 +410,107 @@ footer button {
   outline: none;
   -webkit-appearance: none;
   border: none;
+}
+.select_city {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 120;
+  background: #fff;
+  transition: -webkit-transform 0.2s ease;
+  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, -webkit-transform 0.2s ease;
+  -webkit-transform: translate3d(0, 100%, 0);
+  transform: translate3d(0, 100%, 0);
+}
+.select_city.active {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+.select-city .province {
+  height: 100%;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+.select_city .province p {
+  height: 0.4rem;
+  line-height: 0.4rem;
+  font-size: 0.24rem;
+  padding-left: 0.2rem;
+  background: #f4f4f4;
+}
+.select_city .location p:first-child {
+  height: 0.4rem;
+  line-height: 0.4rem;
+  font-size: 0.24rem;
+  padding-left: 0.2rem;
+  background: #f4f4f4;
+}
+.select_city .location p:nth-child(2) {
+  padding-left: 0.4rem;
+  font-size: 0.28rem;
+  height: 0.8rem;
+  line-height: 0.8rem;
+  background: #fff;
+}
+.select_city .province li {
+  padding-left: 0.3rem;
+  font-size: 0.28rem;
+  height: 0.8rem;
+  line-height: 0.8rem;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+  margin-left: 0.1rem;
+  position: relative;
+}
+.select_city .province li:after {
+  content: "";
+  display: inline-block;
+  padding-top: 0.16rem;
+  padding-right: 0.16rem;
+  border-top: 1px solid #999;
+  border-right: 1px solid #999;
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
+  position: absolute;
+  right: 0.35rem;
+  top: 0.3rem;
+}
+.select_city .city {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 101;
+  background: rgba(0, 0, 0, 0.6);
+  visibility: hidden;
+}
+.select_city .city ul {
+  height: 100%;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+  -webkit-transform: translate3d(100%, 0, 0);
+  transform: translate3d(100%, 0, 0);
+  transition: -webkit-transform 0.2s ease;
+  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, -webkit-transform 0.2s ease;
+}
+.select_city .city.active {
+  visibility: visible;
+}
+.select_city .city.active ul {
+  -webkit-transform: translate3d(30%, 0, 0);
+  transform: translate3d(30%, 0, 0);
+}
+.select_city .city ul li {
+  padding-left: 0.3rem;
+  font-size: 0.28rem;
+  height: 0.8rem;
+  line-height: 0.8rem;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+  margin-left: 0.1rem;
 }
 </style>

@@ -23,12 +23,12 @@
               <ol class="list_box">
                 <li v-for="(v,k) in val.List" :key="k" v-if="k===0">
                 <img v-lazy="v.Url">
-                  <div class="img_tit" @click="setid(val.Id),detail()">
+                  <div class="img_tit" @click="setid(val.Id),detail(true)">
                     <p>{{val.Name}}</p>
                     <p>{{val.Count}}张></p>
                   </div>
                 </li>
-                <li v-else>
+                <li v-else @click="swiper(val.Id)">
                   <img v-lazy="v.Url">
                 </li>
               </ol>
@@ -41,6 +41,15 @@
             </li>
           </ul>
         </div>
+        <div class="img-swiper" v-if="!flags">
+            <swiper :options="swiperOption" ref="mySwiper">
+                <swiper-slide v-for="(item, index) in detailimg" :key="index">
+                    <img v-lazy="item">
+                </swiper-slide>
+                <div class="swiper-pagination"  slot="pagination"></div>
+            </swiper>
+            <p>{{(index)+'/'+(detailimg.length)}}</p>
+        </div>
       </div>
 
     </div>
@@ -48,9 +57,12 @@
 
 <script>
 import { getimgs, getdetailimgs } from "../../mock";
+import "swiper/dist/css/swiper.css";
+import { swiper, swiperSlide } from "vue-awesome-swiper";
 import loading from "../loading";
 export default {
   data() {
+    let that = this;
     return {
       Imgid: this.$route.query.Id,
       imgList: [],
@@ -62,16 +74,39 @@ export default {
       colorId: this.$route.query.colorId,
       carId: this.$route.query.carId,
       flag: true,
-      fetchingAll: false
+      flags: true,
+      fetchingAll: false,
+      index: 1,
+      swiperOption: {
+        on: {
+          touchEnd: function(event) {
+            //你的事件
+            if (this.isEnd) {
+              that.detail(false);
+            }
+            that.index = this.activeIndex + 1;
+          }
+        }
+      }
     };
   },
   components: {
-    loading
+    loading,
+    swiper,
+    swiperSlide
   },
   mounted() {
     this._getimgs();
   },
   methods: {
+    swiper(val) {
+      if (!this.id) {
+        this.flags = true;
+        this.flag = true;
+        this.id = val;
+        this.detail(false);
+      }
+    },
     onscroll(e) {
       if (this.fetchingAll) {
         return;
@@ -129,10 +164,12 @@ export default {
     setid(id) {
       this.id = id;
     },
-    detail() {
-      let show = document.querySelector(".show");
-      if (!show) {
-        document.querySelector(".img_box").className += " show";
+    detail(flag) {
+      if (flag) {
+        let show = document.querySelector(".show");
+        if (!show) {
+          document.querySelector(".img_box").className += " show";
+        }
       }
       let that = this;
       let url = "";
@@ -170,9 +207,17 @@ export default {
       }
       getdetailimgs(url).then(res => {
         res.data.List.map(v => {
-          let url = v.Url.replace("{0}", v.LowSize);
+          let url = "";
+          if (!flag) {
+            url = v.Url.replace("{0}", v.LowSize);
+          } else {
+            url = v.Url.replace("{0}", v.HighSize);
+          }
+
           that.detailimg.push(url);
         });
+        that.flag = false;
+        that.flags = false;
         that.ind++;
         that.fetchingAll = false;
       });
@@ -357,5 +402,26 @@ li {
   font-size: 0.24rem;
   margin-top: 0.3rem;
   color: silver;
+}
+.img-swiper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background: rgba(0, 0, 0, 1);
+  display: flex;
+  align-items: center;
+}
+.img-swiper img {
+  width: 100%;
+}
+.img-swiper p {
+  position: fixed;
+  bottom: 0.3rem;
+
+  color: #fff;
+  z-index: 99;
 }
 </style>
